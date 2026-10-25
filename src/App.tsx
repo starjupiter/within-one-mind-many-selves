@@ -78,7 +78,7 @@ function App() {
     const id = window.setInterval(() => {
       const next = Math.max(0, (deadline.current - Date.now()) / 1000);
       setRemaining(next); remainingRef.current = next;
-      if (next <= 0) { setRunning(false); setStage('expression'); window.speechSynthesis?.cancel(); }
+      if (next <= 0) { setDraft(prev => ({ ...prev, elapsedSeconds: prev.duration * 60 })); setRunning(false); setStage('expression'); window.speechSynthesis?.cancel(); }
     }, 100);
     return () => clearInterval(id);
   }, [running]);
@@ -128,7 +128,7 @@ function App() {
     finally { if (requestId === recordRequest.current) setRequestingMicrophone(false); }
   }
   function completeSession() {
-    const entry: Session = { id: crypto.randomUUID(), title: draft.title.trim(), callSign: draft.callSign.trim(), intention: draft.intention.trim(), observations: draft.observations.trim(), impressions: draft.impressions.trim(), experience: draft.experience.trim(), revisit: draft.revisit, tags: draft.tags.split(',').map(s => s.trim()).filter(Boolean).slice(0, 12), startedAt: draft.startedAt, completedAt: new Date().toISOString(), plannedSeconds: draft.duration * 60, elapsedSeconds: draft.elapsedSeconds || draft.duration * 60, audioId: draft.audioId };
+    const entry: Session = { id: crypto.randomUUID(), title: draft.title.trim(), callSign: draft.callSign.trim(), intention: draft.intention.trim(), observations: draft.observations.trim(), impressions: draft.impressions.trim(), experience: draft.experience.trim(), revisit: draft.revisit, tags: draft.tags.split(',').map(s => s.trim()).filter(Boolean).slice(0, 12), startedAt: draft.startedAt, completedAt: new Date().toISOString(), plannedSeconds: draft.duration * 60, elapsedSeconds: draft.elapsedSeconds, audioId: draft.audioId };
     try { const next = [entry, ...sessions]; saveSessions(next); setSessions(next); setSelected(entry.id); setStage('complete'); } catch { setNotice('Storage is full. Export or remove old entries before saving this session.'); }
   }
   async function removeSession(id: string) { const item = sessions.find(s => s.id === id); if (item?.audioId) await deleteAudio(item.audioId).catch(() => {}); setSessions(prev => prev.filter(s => s.id !== id)); setSelected(null); setDeleteTarget(null); setNotice('Session deleted.'); }
